@@ -41,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -50,6 +51,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
@@ -114,4 +116,5 @@ dependencies {
     //Google Maps
     implementation("com.google.maps.android:maps-compose:2.4.0")
     implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("androidx.compose.material3:material3:1.0.0")
 }
