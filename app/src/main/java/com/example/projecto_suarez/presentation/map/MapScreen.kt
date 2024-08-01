@@ -12,14 +12,14 @@ import com.example.projecto_suarez.presentation.map.components.CanvasMap
 
 @Composable
 fun MapScreen(
-    result: String,
-    state: MapState,
+    result: List<BeaconData>,
+    ubi: Pair<Float, Float>,
     event: (MapEvent) -> Unit,
     navigateToDetails: (Article) -> Unit) {
     ScanCamara(
         onResult = { event(MapEvent.RedirectoToDetails(it, navigateToDetails))}
     )
-    Column(
+    Box(
         modifier = Modifier
             .padding(
                 top = Dimens.MediumPadding1,
@@ -27,16 +27,12 @@ fun MapScreen(
                 end = Dimens.MediumPadding1
             )
             .statusBarsPadding()
-            .fillMaxSize()
     ) {
-        Text(result)
         Spacer(modifier = Modifier.height(8.dp))
-        state.beacons?.forEach { beacon ->
-            Text(text = beacon)
-            Spacer(modifier = Modifier.height(4.dp))
-        }
         CanvasMap(
-            onTouchPaint = { event(MapEvent.RedirectoToDetails(it, navigateToDetails))}
+            onTouchPaint = { event(MapEvent.RedirectoToDetails(it, navigateToDetails))},
+            result = result,
+            ubi = ubi,
         )
 
     }

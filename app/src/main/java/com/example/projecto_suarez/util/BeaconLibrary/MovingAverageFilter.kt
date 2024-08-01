@@ -1,4 +1,4 @@
-package com.example.projecto_suarez.util.BeaconLibrary
+package com.example.trilaterationjetpackcompose.util.BeaconLibrary
 
 import android.util.Log
 import java.util.LinkedList
@@ -6,8 +6,10 @@ import java.util.LinkedList
 class MovingAverageFilter(private val size: Int) {
     val distanceQueue = LinkedList<Double>()
     private val TAG = "MovingAverageFilter";
+    var lastDistance : Double = 0.0;
     fun calculateDistance(txPower:Int, rssi: Int): Double {
-        val factor = (-1 * txPower - rssi) / (10 * 4.0)
+        val measuredPower = -65;
+        val factor = (measuredPower - rssi) / (10 * 3.2)
         val distance = Math.pow(10.0, factor)
         var movingAverage = distance
 
@@ -19,7 +21,8 @@ class MovingAverageFilter(private val size: Int) {
             movingAverage = sum / size
         }
 
-        distanceQueue.add(distance)
+        distanceQueue.add(movingAverage)
+        lastDistance = movingAverage
         if (distanceQueue.size > size) {
             distanceQueue.remove()
         }

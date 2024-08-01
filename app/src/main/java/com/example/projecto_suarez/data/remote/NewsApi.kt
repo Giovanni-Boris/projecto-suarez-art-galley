@@ -1,8 +1,10 @@
 package com.example.projecto_suarez.data.remote
 
 import com.example.projecto_suarez.data.remote.dto.NewsResponse
+import com.example.projecto_suarez.domain.model.ArticleResponse
 import com.example.projecto_suarez.util.Constants.API_KEY
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface NewsApi {
@@ -22,11 +24,8 @@ interface NewsApi {
         @Query("apiKey") apiKey: String = API_KEY
     ): NewsResponse
 
-    @GET("everything")
+    @GET("pictures/{id}")
     suspend fun getNewsById(
-        @Query("sources") sources: String,
-        @Query("pageSize") pageSize: Int,
-        @Query("apiKey") apiKey: String = API_KEY
-    ): NewsResponse
+        @Path("id") id: String ): ArticleResponse
 
 }

@@ -192,12 +192,12 @@ fun NewsNavigator() {
                 //val state = viewModel.state.value
                 //OnBackClickStateSaver(navController = navController)
                 val viewModel: BeaconViewModel = hiltViewModel()
-                val state = viewModel.state.value
                 val result = viewModel.result.value
+                val ubi = viewModel.ubi.value
 
                 MapScreen(
                     result = result,
-                    state = state,
+                    ubi = ubi,
                     event = viewModel::onEvent,
                     navigateToDetails = { article ->
                         navigateToDetails(

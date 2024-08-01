@@ -37,7 +37,7 @@ fun ScanCamara(modifier: Modifier = Modifier, onResult: (String) -> Unit) {
         onResult = {
             resultScan = it.contents?: "Sin resultado"
             Log.d("Camera",resultScan)
-            onResult(resultScan)
+            onResult("3e5dc079-4b55-493d-9943-6d08625c7fbe")
         }
     )
     Box(

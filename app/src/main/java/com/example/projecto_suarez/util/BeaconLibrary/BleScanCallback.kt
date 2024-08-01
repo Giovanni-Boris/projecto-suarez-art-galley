@@ -1,4 +1,4 @@
-package com.example.projecto_suarez.util.BeaconLibrary
+package com.example.trilaterationjetpackcompose.util.BeaconLibrary
 
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult

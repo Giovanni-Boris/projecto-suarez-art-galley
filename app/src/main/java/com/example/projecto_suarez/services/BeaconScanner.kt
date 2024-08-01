@@ -7,17 +7,18 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
-import com.example.projecto_suarez.util.BeaconLibrary.Beacon
-import com.example.projecto_suarez.util.BeaconLibrary.BeaconParser
-import com.example.projecto_suarez.util.BeaconLibrary.BleScanCallback
+import com.example.projecto_suarez.presentation.map.BeaconData
+import com.example.projecto_suarez.util.BeaconLibrary.Utils
 import com.example.projecto_suarez.util.Constants
+import com.example.trilaterationjetpackcompose.util.BeaconLibrary.Beacon
+import com.example.trilaterationjetpackcompose.util.BeaconLibrary.BleScanCallback
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 
 class BeaconScanner(private val context: Context) {
@@ -26,13 +27,13 @@ class BeaconScanner(private val context: Context) {
     private lateinit var bluetoothManager: BluetoothManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private var btScanner: BluetoothLeScanner? = null;
-    private val beacons = HashMap<String, Beacon>();
-    private val _resultBeacons = MutableStateFlow("No beacons Detected")
-    val resultBeacons: StateFlow<String> = _resultBeacons
+    var beaconSet: HashMap<String,Beacon> = HashMap()
+    private val _beaconsFlow = MutableStateFlow<List<BeaconData>>(emptyList())
+    val resultBeacons =  _beaconsFlow.asStateFlow()
 
+    val UUID_default = "46ca9f8463e64f2aaea77c72f4826baf"
 
     fun initBluetooth() {
-
         bluetoothManager = getSystemService(context,BluetoothManager::class.java)!!
         bluetoothAdapter = bluetoothManager.adapter
 
@@ -88,23 +89,49 @@ class BeaconScanner(private val context: Context) {
     @SuppressLint("MissingPermission")
     val onScanResultAction: (ScanResult?) -> Unit = { result ->
         Log.d(TAG, "onScanResultAction ")
-
         val scanRecord = result?.scanRecord
+        val beacon = Beacon(result?.device?.address)
+        beacon.manufacturer = result?.device?.name
 
-        var rssi = result?.rssi
+        beacon.rssi = result?.rssi
+
         if (scanRecord != null) {
             scanRecord?.bytes?.let {
-                val parserBeacon = BeaconParser.parseIBeacon(it, rssi)
-                if (!beacons.containsKey(parserBeacon.uuid)){
-                    parserBeacon.uuid?.let { it1 -> beacons.put(it1, parserBeacon) }
+                val iBeaconManufactureData = scanRecord.getManufacturerSpecificData(0X004c)
+                if (iBeaconManufactureData != null && iBeaconManufactureData.size >= 23) {
+                    val iBeaconUUID = Utils.toHexString(iBeaconManufactureData.copyOfRange(2, 18))
+                    Log.d(TAG, iBeaconUUID)
+
+                    if (iBeaconUUID != UUID_default)
+                        return@let
+
+                    val major = Integer.parseInt(Utils.toHexString(iBeaconManufactureData.copyOfRange(18, 20)), 16)
+                    val minor = Integer.parseInt(Utils.toHexString(iBeaconManufactureData.copyOfRange(20, 22)), 16)
+                    val txPower = Integer.parseInt(
+                        Utils.toHexString(iBeaconManufactureData.copyOfRange(22, 23)),
+                        16
+                    )
+                    beacon.type = Beacon.beaconType.iBeacon
+                    beacon.uuid = iBeaconUUID
+                    beacon.major = major
+                    beacon.minor = minor
+
+                    val key = "${beacon.uuid}${beacon.minor}${beacon.major}"
+
+                    if(!beaconSet.containsKey(key)){
+                        beaconSet.put(key, beacon)
+                    }
+
+                    val beacounInSet = beaconSet.get(key)
+
+                    beacon.rssi?.let { it1 -> beacounInSet?.calculateDistance(txPower = txPower, rssi = it1) }
+
+                    Log.e(TAG, "iBeaconUUID:$iBeaconUUID major:$major minor:$minor rssi:${beacon?.rssi} distance ${beacounInSet?.movingAverageFilter?.lastDistance}" )
+
+                    _beaconsFlow.value = beaconSet.values.toList().map { BeaconData(it.uuid!!,
+                        it.movingAverageFilter.lastDistance.toFloat(), it.minor!!
+                    ) }
                 }
-                val beaconSave = beacons.get(parserBeacon.uuid)
-                if (beaconSave != null) {
-                    beaconSave.rssi = parserBeacon.rssi
-                };
-                val distance = parserBeacon.txPower?.let { it1 -> parserBeacon.rssi?.let { it2 -> beaconSave?.calculateDistance(txPower = it1, rssi = it2) } }
-                _resultBeacons.value =  beaconSave.toString() + "distance "+ distance;
-                Log.d(TAG, beaconSave.toString() + "distance "+ distance);
 
             }
         }
@@ -115,6 +142,8 @@ class BeaconScanner(private val context: Context) {
         if (it != null) {
             Log.d(TAG, "BatchScanResult " + it.toString())
         }
+        Log.d(TAG, "Size of beacons " + it?.size)
+
     }
 
     val onScanFailedAction: (Int) -> Unit = {
@@ -125,8 +154,6 @@ class BeaconScanner(private val context: Context) {
         onBatchScanResultAction,
         onScanFailedAction
     )
-    fun changeDetection(updateUI: (String)->Unit, result:String){
-        updateUI(result)
-    }
+
 
 }

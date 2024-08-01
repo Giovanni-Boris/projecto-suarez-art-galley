@@ -8,4 +8,5 @@ data class NewsUseCases(
     val selectArticles: SelectArticles,
     val selectArticle: SelectArticle,
     val searchNewById: GetNewById
+
 )

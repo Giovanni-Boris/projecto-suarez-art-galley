@@ -17,3 +17,10 @@ data class Article(
     @PrimaryKey val url: String,
     val urlToImage: String
 ): Parcelable
+
+
+@Parcelize
+data class ArticleResponse(
+    val status: String,
+    var picture: Article
+): Parcelable
