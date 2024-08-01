@@ -7,14 +7,14 @@ import retrofit2.http.Query
 
 interface NewsApi {
 
-    @GET("everything")
+    @GET("pictures")
     suspend fun getNews(
         @Query("sources") sources: String,
         @Query("page") page: Int,
         @Query("apiKey") apiKey: String = API_KEY
     ): NewsResponse
 
-    @GET("everything")
+    @GET("pictures")
     suspend fun searchNews(
         @Query("q") searchQuery: String,
         @Query("sources") sources: String,
